@@ -1,15 +1,40 @@
 # -*- coding: utf-8 -*-
+from hashlib import sha256
+import hmac, base64
 import requests
 import logging
 import json
 import time
 import fc2
 
+# 验证钉钉机器人请求签名
+def verify_sign(timestamp, key, not_verify_sign):
+    data = timestamp + "\n" + appSecret
+    key = key.encode('utf-8')
+    message = data.encode('utf-8')
+    sign = base64.b64encode(hmac.new(key, message, digestmod=sha256).digest())
+    sign = str(sign, 'utf-8')
+    return not_verify_sign == sign
+
 def handler(environ, start_response):
     logger = logging.getLogger()
 
     # Endpoint地址详见文档https://help.aliyun.com/document_detail/52984.html
-    endpoint = '修改为你的阿里云函数计算Endpoint地址' 
+    endpoint = '修改为你的阿里云函数计算Endpoint地址'
+    # 钉钉应用的appSecret
+    appSecret = '修改为你的钉钉应用的appSecret'
+
+    timestamp = environ['HTTP_TIMESTAMP'] # 请求时间戳
+    not_verify_sign = environ['HTTP_SIGN'] # 请求签名
+    # 验证钉钉机器人请求签名，验证不通过时返回拒绝执行响应码
+    if verify_sign(timestamp,appSecret,not_verify_sign):
+        logger.info('Dingtalk robot request signature verification successful！')
+    else:
+        logger.info('Dingtalk robot request signature verification failed！')
+        status = '403 Forbidden'
+        response_headers = [('Content-type', 'text/plain ')]
+        start_response(status, response_headers)
+        return [bytes('','utf-8')]
 
     # 获取请求体
     try:
@@ -38,8 +63,20 @@ def handler(environ, start_response):
     # 异步调用回复函数
     client.invoke_function('ChatGTP_Services', 'Dingtalk_ChatGPT_Reply', payload=payload.encode("utf-8"), headers={'x-fc-invocation-type': 'Async'})
 
+    # =====以下为同步调用时，直接返回回复的消息内容，但由于回复内容较多时，函数执行时间超过钉钉响应时间要求（10s），函数应该采用异步调用的方式，由上代码进行会话回复推送。=====
+    # 构造相码及响应头
+    # status = '200 OK'
+    # response_headers = [('Content-type', '"application/json; charset=utf-8')]
+    # start_response(status, response_headers)
+    
+    # 响应Bytes
+    # body_bytes = bytes(json.dumps(msg),'utf-8')
+
+    # return value must be iterable    
+    # return [body_bytes]
+
     status = '200 OK'
-    response_headers = [('Content-type', '"application/json; charset=utf-8')]
+    response_headers = [('Content-type', 'application/json; charset=utf-8')]
     start_response(status, response_headers)
 
     return [bytes('{}','utf-8')]
