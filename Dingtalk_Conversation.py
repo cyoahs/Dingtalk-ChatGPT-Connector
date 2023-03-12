@@ -8,11 +8,11 @@ import time
 import fc2
 
 # 验证钉钉机器人请求签名
-def verify_sign(timestamp, key, not_verify_sign):
+def verify_sign(timestamp, appSecret, not_verify_sign):
     data = timestamp + "\n" + appSecret
-    key = key.encode('utf-8')
+    appSecret = appSecret.encode('utf-8')
     message = data.encode('utf-8')
-    sign = base64.b64encode(hmac.new(key, message, digestmod=sha256).digest())
+    sign = base64.b64encode(hmac.new(appSecret, message, digestmod=sha256).digest())
     sign = str(sign, 'utf-8')
     return not_verify_sign == sign
 
