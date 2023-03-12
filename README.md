@@ -49,3 +49,8 @@
 #### 使用方式
 1. 用户在钉钉中搜索创建的机器人，发送消息，随后既可以收到ChatGPT的回复
 2. 将机器人添加到钉钉群里中，@机器人 并附带消息内容，随后既可以收到ChatGPT的回复
+
+### 参考资料
+* ChatGPT API 调用文档：https://platform.openai.com/docs/api-reference/making-requests
+* 钉钉机器人接收消息文档：https://open.dingtalk.com/document/orgapp/receive-message
+* 阿里云函数计算概述文档：https://help.aliyun.com/document_detail/61009.html
