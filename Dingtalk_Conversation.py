@@ -24,8 +24,8 @@ def handler(environ, start_response):
     # 钉钉应用的appSecret
     appSecret = '修改为你的钉钉应用的appSecret'
 
-    timestamp = environ['HTTP_TIMESTAMP'] # 请求时间戳
-    not_verify_sign = environ['HTTP_SIGN'] # 请求签名
+    timestamp = environ['HTTP_TIMESTAMP'] # 获取请求时间戳
+    not_verify_sign = environ['HTTP_SIGN'] # 获取请求签名
     # 验证钉钉机器人请求签名，验证不通过时返回拒绝执行响应码
     if verify_sign(timestamp,appSecret,not_verify_sign):
         logger.info('Dingtalk robot request signature verification successful！')
