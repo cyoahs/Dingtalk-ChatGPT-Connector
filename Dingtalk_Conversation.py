@@ -63,18 +63,6 @@ def handler(environ, start_response):
     # 异步调用回复函数
     client.invoke_function('ChatGTP_Services', 'Dingtalk_ChatGPT_Reply', payload=payload.encode("utf-8"), headers={'x-fc-invocation-type': 'Async'})
 
-    # =====以下为同步调用时，直接返回回复的消息内容，但由于回复内容较多时，函数执行时间超过钉钉响应时间要求（10s），函数应该采用异步调用的方式，由上代码进行会话回复推送。=====
-    # 构造相码及响应头
-    # status = '200 OK'
-    # response_headers = [('Content-type', '"application/json; charset=utf-8')]
-    # start_response(status, response_headers)
-    
-    # 响应Bytes
-    # body_bytes = bytes(json.dumps(msg),'utf-8')
-
-    # return value must be iterable    
-    # return [body_bytes]
-
     status = '200 OK'
     response_headers = [('Content-type', 'application/json; charset=utf-8')]
     start_response(status, response_headers)
