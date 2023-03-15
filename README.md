@@ -46,6 +46,28 @@
 
 **【注意事项】函数计算的服务区域不建议选择国内，建议选择美国本土，由于ChatGPT不对国内提供服务及政策等原因，国内IP可能无法访问ChatGPT API。**
 
+** 【Q&A】创建完HTTP函数和事件函数后无法调用? **
+
+建议简称一下HTTP函数和事件函数的调用日志，查看函数是否被调用或执行成功。
+
+如果函数没有被调用，那有可能是下面的几种原因。
+
+一、钉钉机器人接收消息的地址不正确认
+
+请确保钉钉机器人接收消息的地址为HTTP函数的公网访问地址
+
+二、函数配置->请求处理程序 配置不正确。
+
+例如你的python文件名为index.py，函数计算执行所调用的方法名称为handler，那么请求处理程序配置的值应为 index.handler
+
+https://help.aliyun.com/document_detail/74756.html?spm=a2c4g.11186623.0.0.47fd4e53Lfh2nR
+
+三、HTTP函数异步调用事件函数的参数值不正确。
+
+第一个参数为事件函数所在服务名称，第二个参数为函数的名称
+
+client.invoke_function('service_name', 'function_name', headers = {'x-fc-invocation-type': 'Async'})
+
 ### 使用方式
 
 方式一：用户在钉钉中搜索创建的机器人，发送消息，随后既可以收到ChatGPT的回复
