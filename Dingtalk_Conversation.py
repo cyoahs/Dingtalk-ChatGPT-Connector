@@ -31,7 +31,9 @@ def handler(environ, start_response):
     # chatgpt 函数名
     CHATGPT_FUNCTION = os.environ.get('CHATGPT_FUNCTION')
     # 日志级别
-    VERBOSE = int(os.environ.get('VERBOSE')) if 'VERBOSE' in os.environ else 25
+    VERBOSE = int(os.environ.get('VERBOSE', 25))
+
+    logger.setLevel(VERBOSE)
 
     timestamp = environ['HTTP_TIMESTAMP'] # 获取请求时间戳
     not_verify_sign = environ['HTTP_SIGN'] # 获取请求签名
