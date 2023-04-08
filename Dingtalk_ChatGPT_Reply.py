@@ -80,8 +80,12 @@ def handler(event, context):
         response = requests.post("https://api.openai.com/v1/chat/completions",
                                  headers=headers,
                                  json=data)
-        answer = response.json()['choices'][0]['message']['content'].strip()
-        logger.info(f'ChatGPT回答：{answer}')
+        try:
+            answer = response.json()['choices'][0]['message']['content'].strip()
+            logger.info(f'ChatGPT回答：{answer}')
+        except KeyError:
+            answer = response.text
+            logger.warning(f'无法读取回答！错误信息：{answer}')
 
         # 保存聊天历史记录
         msg_history.append({"role": "assistant", "content": answer})
