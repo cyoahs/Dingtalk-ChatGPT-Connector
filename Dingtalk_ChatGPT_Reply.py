@@ -27,6 +27,7 @@ def handler(event, context):
 
     # 获取函数调用传参
     evt = json.loads(event)
+    logger.debug(f'raw event: {evt}')
     sessionExpiredTime = evt['sessionExpiredTime']
     sessionWebhook = evt['sessionWebhook']
     question = evt['question']
@@ -52,6 +53,7 @@ def handler(event, context):
             msg_history = pickle.load(f)[-HISTORY_LENGTH*2:]
 
     msg_history.append({"role": "user", "content": question})
+    logger.debug(f'msg_history: {msg_history}')
 
     answer = ''
     if command:
@@ -80,6 +82,7 @@ def handler(event, context):
         response = requests.post("https://api.openai.com/v1/chat/completions",
                                  headers=headers,
                                  json=data)
+        logger.debug(f'response.text: {response.text}')
         try:
             answer = response.json()['choices'][0]['message']['content'].strip()
             logger.info(f'ChatGPT回答：{answer}')
