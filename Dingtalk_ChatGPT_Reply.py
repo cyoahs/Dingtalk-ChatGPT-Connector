@@ -18,9 +18,11 @@ def handler(event, context):
     OSS_ENDPOINT = os.environ.get('OSS_ENDPOINT')
     OSS_BUCKET_NAME = os.environ.get('OSS_BUCKET_NAME')
     # 历史聊天记录长度
-    HISTORY_LENGTH = int(os.environ.get('HISTORY_LENGTH')) if 'HISTORY_LENGTH' in os.environ else 5
+    HISTORY_LENGTH = int(os.environ.get('HISTORY_LENGTH', 5))
     # 日志级别
-    VERBOSE = int(os.environ.get('VERBOSE')) if 'VERBOSE' in os.environ else 25
+    VERBOSE = int(os.environ.get('VERBOSE', 25))
+    # 超时
+    TIMEOUT = int(os.environ.get('TIMEOUT', 55))
 
     logger = logging.getLogger()
     logger.setLevel(VERBOSE)
@@ -79,23 +81,36 @@ def handler(event, context):
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {CHATGPT_API_KEY}'
         }
-        response = requests.post("https://api.openai.com/v1/chat/completions",
-                                 headers=headers,
-                                 json=data)
-        logger.debug(f'response.text: {response.text}')
         try:
-            answer = response.json()['choices'][0]['message']['content'].strip()
-            logger.info(f'ChatGPT回答：{answer}')
-        except KeyError:
-            answer = response.text
-            logger.warning(f'无法读取回答！错误信息：{answer}')
+            response = requests.post("https://api.openai.com/v1/chat/completions",
+                                    headers=headers,
+                                    json=data,
+                                    timeout=TIMEOUT)
+            logger.debug(f'response.text: {response.text}')
+        except requests.exceptions.Timeout:
+            logger.warning(f'ChatGPT 请求超时！')
+            response = None
+
+        reply_success = False
+        if response is not None:
+            try:
+                answer = response.json()['choices'][0]['message']['content'].strip()
+                reply_success = True
+                logger.info(f'ChatGPT回答：{answer}')
+            except KeyError:
+                answer = response.text
+                logger.warning(f'无法读取回答！错误信息：{answer}')
+        else:
+            answer = 'ChatGPT请求超时！'
+            logger.warning(answer)
 
         # 保存聊天历史记录
-        msg_history.append({"role": "assistant", "content": answer})
-        with open(fname, 'wb') as f:
-            pickle.dump(msg_history, f)
-        result = bucket.put_object_from_file(user_id, fname)
-        logger.info(result)
+        if reply_success:
+            msg_history.append({"role": "assistant", "content": answer})
+            with open(fname, 'wb') as f:
+                pickle.dump(msg_history, f)
+            result = bucket.put_object_from_file(user_id, fname)
+            logger.info(result)
 
     # 推送Webhook消息
     msg = {"msgtype": "text", "text": {"content": answer}}
