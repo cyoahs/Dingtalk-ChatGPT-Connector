@@ -120,3 +120,4 @@ client.invoke_function('service_name', 'function_name', headers = {'x-fc-invocat
 * 阿里云函数计算概述文档：https://help.aliyun.com/document_detail/61009.html
 * 阿里云对象存储文档: https://help.aliyun.com/product/31815.html
 * 阿里云AccessKey获取方式: https://help.aliyun.com/document_detail/116401.htm
+* 函数计算挂载OSS文档：https://help.aliyun.com/document_detail/454199.html
