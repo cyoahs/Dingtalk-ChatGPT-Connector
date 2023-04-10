@@ -114,6 +114,7 @@ client.invoke_function('service_name', 'function_name', headers = {'x-fc-invocat
 默认按照用户名存储过去5次对话，可以在函数 `Dingtalk_ChatGPT_Reply` 中添加环境变量 `HISTORY_LENGTH` 调整。在聊天中发送 `\clear` 可以强制清楚该用户的历史会话。
 
 ### 参考资料
+* 原作者仓库：https://github.com/Sunny-Law/Dingtalk-ChatGPT-Connector
 * ChatGPT API 调用文档：https://platform.openai.com/docs/api-reference/making-requests
 * 钉钉机器人接收消息文档：https://open.dingtalk.com/document/orgapp/receive-message
 * 阿里云函数计算概述文档：https://help.aliyun.com/document_detail/61009.html
