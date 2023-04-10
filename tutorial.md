@@ -5,8 +5,8 @@
 ## 效果
 在钉钉中私聊机器人，或在群聊中@机器人。
 
-![单聊](ChatGPT单聊场景截图.png)
-![群聊](ChatGPT群聊场景截图.png)
+![单聊](assets/ChatGPT单聊场景截图.png)
+![群聊](assets/ChatGPT群聊场景截图.png)
 
 ## 前提条件
 
