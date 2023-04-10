@@ -28,7 +28,6 @@
 4. ChatGPT回复事件函数从OSS拉取聊天历史，将消息内容发送到ChatGPT API，收到ChatGPT API回复的内容后，将聊天内容保存在OSS，将回复内容发送到会话Webhook
 5. 用户接收到ChatGPT机器人的回复内容
 
-
 **【Q&A】为什么不在会话HTTP函数中直接调用ChatGPT API返回回复内容？而是异步调用ChatGPT回复事件函数？**
 
 钉钉会话HTTP函数可以直接返回回复消息内容，但钉钉机器人对消息接收地址的响应时间有要求，超过10s未响应会主动关闭HTTP连接，当ChatGPT接收或回复内容较多时处理时间较长，消息未响应时钉钉机器人已关闭HTTP连接。
@@ -37,37 +36,46 @@
 
 1. 注册OpenAI，获取调用ChatGPT API的Key（具体注册流程和API Key获取不再描述详细，请参详搜索引擎）
 
-2. 开通阿里云函数计算服务，服务区域切换到美国-硅谷，创建ChatGPT服务“ChatGTP_Services”。
+2. 开通阿里云函数计算服务，服务区域切换到美国-硅谷，创建 ChatGPT 服务 `ChatGTP_Services`。
 
 3. 开通阿里云对象存储服务，创建一个Bucket，按需命名。
 
-4. ChatGPT服务下分别创建HTTP函数“Dingtalk_Conversation”和事件函数“Dingtalk_ChatGPT_Reply”，代码参考本Repository的Dingtalk_Conversation.py和Dingtalk_ChatGPT_Reply.py
-* HTTP函数 Dingtalk_Conversation 的HTTP触发器提供公网访问地址，用于接收钉钉机器人转发的用户消息
-* 事件函数 Dingtalk_ChatGPT_Reply 用于调用ChatGPT API并回复用户消息
+4. 在函数计算 `ChatGTP_Services` 的服务详情-存储配置中开启OSS挂载功能，挂载上一步所创建的Bucket，建议挂载点为 `/mnt/oss`。
 
-5. 为两个函数配置环境变量
+5. ChatGPT服务下分别创建HTTP函数 `Dingtalk_Conversation` 和事件函数 `Dingtalk_ChatGPT_Reply`，代码参考本 Repository 的`Dingtalk_Conversation.py` 和 `Dingtalk_ChatGPT_Reply.py`
+* HTTP函数 `Dingtalk_Conversation` 的HTTP触发器提供公网访问地址，用于接收钉钉机器人转发的用户消息
+* 事件函数 `Dingtalk_ChatGPT_Reply` 用于调用ChatGPT API并回复用户消息
+
+6. 为两个函数配置环境变量
 ```javascript
 // 环境变量说明
 // 函数：Dingtalk_Conversation:
 {
+    // 必填项
     "CHATGPT_FUNCTION": "Dingtalk_ChatGPT_Reply",
     "DINGTALK_APP_SECRET": "修改为你的钉钉应用的appSecret",
     "ENDPOINT": "修改为你的阿里云函数计算Endpoint地址",
     "SERVICE_NAME": "ChatGTP_Services",
+    
+    // 选填项
+    "VERBOSE": "25", // 日志级别
 }
 // Endpoint地址详见文档 https://help.aliyun.com/document_detail/52984.html
 
 // 函数: Dingtalk_ChatGPT_Reply
 {
-    "ACCESS_KEY_ID": "修改为你的阿里云AccessKeyId",
-    "ACCESS_KEY_SECRET": "修改为你的阿里云AccessKeySecret",
+    // 必填项
     "CHATGPT_API_KEY": "修改为你的ChatGPT API Key",
-    "OSS_BUCKET_NAME": "修改为你创建的OSS Bucket 的名称",
-    "OSS_ENDPOINT": "修改为你创建的OSS Bucket 的 EndPoint，可以在 Bucket 管理页面查看",
+
+    // 选填项
+    "HISTORY_LENGTH": "5", // 历史记录长度（一问一答算一次）
+    "OSS_MOUNT_POINT": "/mnt/oss", // 自定义 OSS 挂载点
+    "TIMEOUT": "55", // chatgpt请求时间，请使用小于函数执行时间的数值
+    "VERBOSE": "25", // 日志级别
 }
 ```
 
-6. 钉钉开发者后台中创建ChatGPT应用及机器人（政策原因机器人名称勿命名为ChatGPT），机器人消息接收地址填入Dingtalk_Conversation 的公网访问地址
+7. 钉钉开发者后台中创建ChatGPT应用及机器人（政策原因机器人名称勿命名为ChatGPT），机器人消息接收地址填入Dingtalk_Conversation 的公网访问地址
 
 **【注意事项】函数计算的服务区域不建议选择国内，建议选择美国本土，由于ChatGPT不对国内提供服务及政策等原因，国内IP可能无法访问ChatGPT API。**
 

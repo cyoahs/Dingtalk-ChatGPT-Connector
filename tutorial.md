@@ -49,6 +49,12 @@ ChatGPT API Key: https://platform.openai.com/account/api-keys **(注意保护密
 
 开通阿里云对象存储，创建一个 Bucket，获取 Bucket 的名称和 Endpoint。
 
+### 4. 挂载OSS
+
+在函数计算 `ChatGTP_Services` 的服务详情-存储配置中开启OSS挂载功能，挂载上一步所创建的Bucket，建议挂载点为 `/mnt/oss`。
+
+![mount_oss](assets/fc挂载oss.png)
+
 ### 4. 创建函数计算服务
 
 开通阿里云函数计算服务，服务地区切换到美国硅谷(嘘，不要动歪心思)，创建服务，命名为 `ChatGTP_Services`。创建名为 `Dingtalk_Conversation` 的**HTTP函数**，并将代码仓库的 `Dingtalk_Conversation.py` 内容复制进去。再创建名为 `Dingtalk_ChatGPT_Reply` 的**事件函数**，并将代码仓库的 `Dingtalk_ChatGPT_Reply.py` 内容复制进去。
@@ -59,20 +65,27 @@ ChatGPT API Key: https://platform.openai.com/account/api-keys **(注意保护密
 // 环境变量说明
 // 函数：Dingtalk_Conversation:
 {
+    // 必填项
     "CHATGPT_FUNCTION": "Dingtalk_ChatGPT_Reply",
     "DINGTALK_APP_SECRET": "修改为你的钉钉应用的appSecret",
     "ENDPOINT": "修改为你的阿里云函数计算Endpoint地址",
     "SERVICE_NAME": "ChatGTP_Services",
+    
+    // 选填项
+    "VERBOSE": "25", // 日志级别
 }
 // Endpoint地址详见文档 https://help.aliyun.com/document_detail/52984.html
 
 // 函数: Dingtalk_ChatGPT_Reply
 {
-    "ACCESS_KEY_ID": "修改为你的阿里云AccessKeyId",
-    "ACCESS_KEY_SECRET": "修改为你的阿里云AccessKeySecret",
+    // 必填项
     "CHATGPT_API_KEY": "修改为你的ChatGPT API Key",
-    "OSS_BUCKET_NAME": "修改为你创建的OSS Bucket 的名称",
-    "OSS_ENDPOINT": "修改为你创建的OSS Bucket 的 EndPoint，可以在 Bucket 管理页面查看",
+
+    // 选填项
+    "HISTORY_LENGTH": "5", // 历史记录长度（一问一答算一次）
+    "OSS_MOUNT_POINT": "/mnt/oss", // 自定义 OSS 挂载点
+    "TIMEOUT": "55", // chatgpt请求时间，请使用小于函数执行时间的数值
+    "VERBOSE": "25", // 日志级别
 }
 ```
 

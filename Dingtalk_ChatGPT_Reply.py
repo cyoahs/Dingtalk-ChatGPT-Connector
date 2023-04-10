@@ -5,18 +5,12 @@ import json
 import pickle
 import os
 
-import oss2
-
 
 def handler(event, context):
     # ChatGPT API Key
     CHATGPT_API_KEY = os.environ.get('CHATGPT_API_KEY')
-    # aliyun key
-    ACCESS_KEY_ID = os.environ.get('ACCESS_KEY_ID')
-    ACCESS_KEY_SECRET = os.environ.get('ACCESS_KEY_SECRET')
-    # oss info
-    OSS_ENDPOINT = os.environ.get('OSS_ENDPOINT')
-    OSS_BUCKET_NAME = os.environ.get('OSS_BUCKET_NAME')
+    # oss mount point
+    OSS_MOUNT_POINT = os.environ.get('OSS_MOUNT_POINT', '/mnt/oss')
     # 历史聊天记录长度
     HISTORY_LENGTH = int(os.environ.get('HISTORY_LENGTH', 5))
     # 日志级别
@@ -43,15 +37,12 @@ def handler(event, context):
     clear = 'clear'
 
     # 读取聊天历史记录
-    auth = oss2.Auth(ACCESS_KEY_ID, ACCESS_KEY_SECRET)
-    bucket = oss2.Bucket(auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
-    exist = bucket.object_exists(user_id)
-    fname = '/tmp/tmp.pkl'
+    msg_file = os.path.join(OSS_MOUNT_POINT, f'{user_id}.pkl')
+    exist = os.path.exists(msg_file)
 
     msg_history = []
     if exist:
-        bucket.get_object_to_file(user_id, fname)
-        with open(fname, 'rb') as f:
+        with open(msg_file, 'rb') as f:
             msg_history = pickle.load(f)[-HISTORY_LENGTH*2:]
 
     msg_history.append({"role": "user", "content": question})
@@ -63,12 +54,12 @@ def handler(event, context):
         if command == clear:
             # 手动清理聊天记录
             if exist:
-                bucket.delete_object(user_id)
+                os.remove(msg_file)
             answer = clear
             logger.info(clear)
         else:
             # 未知指令
-            answer = 'Unknown command!'
+            answer = f'未知指令：{command}'
             logger.warning(f'Unknown command: {command}')
     else:
         # 调用ChatGPT API
@@ -96,21 +87,19 @@ def handler(event, context):
             try:
                 answer = response.json()['choices'][0]['message']['content'].strip()
                 reply_success = True
-                logger.info(f'ChatGPT回答：{answer}')
+                logger.info(f'ChatGPT 回答：{answer}')
             except KeyError:
                 answer = response.text
                 logger.warning(f'无法读取回答！错误信息：{answer}')
         else:
-            answer = 'ChatGPT请求超时！'
+            answer = 'ChatGPT 请求超时！'
             logger.warning(answer)
 
         # 保存聊天历史记录
         if reply_success:
             msg_history.append({"role": "assistant", "content": answer})
-            with open(fname, 'wb') as f:
+            with open(msg_file, 'wb') as f:
                 pickle.dump(msg_history, f)
-            result = bucket.put_object_from_file(user_id, fname)
-            logger.info(result)
 
     # 推送Webhook消息
     msg = {"msgtype": "text", "text": {"content": answer}}
