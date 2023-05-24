@@ -17,9 +17,15 @@ def handler(event, context):
     VERBOSE = int(os.environ.get('VERBOSE', 25))
     # 超时
     TIMEOUT = int(os.environ.get('TIMEOUT', 55))
+    # 自定义服务商
+    ENDPOINT = os.environ.get('ENDPOINT', 'https://api.openai.com')
+    # 服务商 API Key
+    USER_API_KEY = os.environ.get('USER_API_KEY', '')
 
     logger = logging.getLogger()
     logger.setLevel(VERBOSE)
+
+    api_key = CHATGPT_API_KEY if ENDPOINT is 'https://api.openai.com' else USER_API_KEY
 
     # 获取函数调用传参
     evt = json.loads(event)
@@ -70,10 +76,10 @@ def handler(event, context):
         }
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f'Bearer {CHATGPT_API_KEY}'
+            'Authorization': f'Bearer {api_key}'
         }
         try:
-            response = requests.post("https://api.openai.com/v1/chat/completions",
+            response = requests.post(f"{ENDPOINT}/v1/chat/completions",
                                     headers=headers,
                                     json=data,
                                     timeout=TIMEOUT)
