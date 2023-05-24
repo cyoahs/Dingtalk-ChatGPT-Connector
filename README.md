@@ -72,7 +72,10 @@
     "OSS_MOUNT_POINT": "/mnt/oss", // 自定义 OSS 挂载点
     "TIMEOUT": "55", // chatgpt请求时间，请使用小于函数执行时间的数值
     "VERBOSE": "25", // 日志级别
+    "ENDPOINT": "https://api.openai.com", // 第三方接口配置，当这一项不为openai官方接口时忽略`CHATGPT_API_KEY`
+    "USER_API_KEY": "", // 第三方接口密钥
 }
+// 如使用api2d等第三方接口，请配置`ENDPOINT`与`USER_API_KEY`。
 ```
 
 7. 钉钉开发者后台中创建ChatGPT应用及机器人（政策原因机器人名称勿命名为ChatGPT），机器人消息接收地址填入Dingtalk_Conversation 的公网访问地址
